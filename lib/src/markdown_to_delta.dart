@@ -19,6 +19,9 @@ typedef ElementToEmbeddableConvertor = Embeddable Function(
   Map<String, String> elAttrs,
 );
 
+/// Whether to insert a new line before or after the element.
+typedef ShouldInsertNewLine = bool? Function(md.Element element);
+
 /// Convertor from Markdown string to quill [Delta].
 class MarkdownToDelta extends Converter<String, Delta>
     implements md.NodeVisitor {
@@ -29,6 +32,8 @@ class MarkdownToDelta extends Converter<String, Delta>
     this.customElementToBlockAttribute = const {},
     this.customElementToEmbeddable = const {},
     this.softLineBreak = false,
+    this.shouldInsertNewLineBeforeElement,
+    this.shouldInsertNewLineAfterElement,
   });
 
   final md.Document markdownDocument;
@@ -36,6 +41,18 @@ class MarkdownToDelta extends Converter<String, Delta>
   final Map<String, ElementToAttributeConvertor> customElementToBlockAttribute;
   final Map<String, ElementToEmbeddableConvertor> customElementToEmbeddable;
   final bool softLineBreak;
+
+  /// Whether to insert a new line before the element.
+  /// If true, a new line will be inserted before the element.
+  /// If false, a new line will not be inserted before the element.
+  /// If null, the default handler will be used.
+  final ShouldInsertNewLine? shouldInsertNewLineBeforeElement;
+
+  /// Whether to insert a new line after the element.
+  /// If true, a new line will be inserted after the element.
+  /// If false, a new line will not be inserted after the element.
+  /// If null, the default handler will be used.
+  final ShouldInsertNewLine? shouldInsertNewLineAfterElement;
 
   // final _blockTags = <String>[
   //   'p',
@@ -259,6 +276,14 @@ class MarkdownToDelta extends Converter<String, Delta>
   }
 
   void _insertNewLineBeforeElementIfNeeded(md.Element element) {
+    final shouldInsertNewLine = shouldInsertNewLineBeforeElement?.call(element);
+    if (shouldInsertNewLine != null) {
+      if (shouldInsertNewLine) {
+        _insertNewLine();
+      }
+      return;
+    }
+
     if (!_isInBlockQuote &&
         _lastTag == 'blockquote' &&
         element.tag == 'blockquote') {
@@ -278,8 +303,15 @@ class MarkdownToDelta extends Converter<String, Delta>
   }
 
   void _insertNewLineAfterElementIfNeeded(md.Element element) {
-    // TODO: refactor this to allow embeds to specify if they require
-    // new line after them
+    final shouldInsertNewLine = shouldInsertNewLineAfterElement?.call(element);
+    if (shouldInsertNewLine != null) {
+      if (shouldInsertNewLine) {
+        _justPreviousBlockExit = true;
+        _insertNewLine();
+      }
+      return;
+    }
+
     if (element.tag == 'hr' || element.tag == EmbeddableTable.tableType) {
       // Always add new line after divider
       _justPreviousBlockExit = true;
