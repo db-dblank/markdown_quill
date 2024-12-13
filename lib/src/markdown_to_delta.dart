@@ -127,6 +127,7 @@ class MarkdownToDelta extends Converter<String, Delta>
   bool _isInCodeblock = false;
   bool _justPreviousBlockExit = false;
   String? _lastTag;
+  bool _didRemoveTrailingSoftLineBreak = false;
   String? _currentBlockTag;
   int _listItemIndent = -1;
 
@@ -183,6 +184,9 @@ class MarkdownToDelta extends Converter<String, Delta>
       var lines = renderedText.split('\n');
       if (renderedText.endsWith('\n')) {
         lines = lines.sublist(0, lines.length - 1);
+        if (softLineBreak) {
+          _didRemoveTrailingSoftLineBreak = true;
+        }
       }
       for (var i = 0; i < lines.length; i++) {
         final isLastItem = i == lines.length - 1;
@@ -203,6 +207,7 @@ class MarkdownToDelta extends Converter<String, Delta>
   bool visitElementBefore(md.Element element) {
     _insertNewLineBeforeElementIfNeeded(element);
 
+    _didRemoveTrailingSoftLineBreak = false;
     final tag = element.tag;
     _currentBlockTag ??= tag;
     _lastTag = tag;
@@ -297,6 +302,13 @@ class MarkdownToDelta extends Converter<String, Delta>
     }
 
     if (_listItemIndent >= 0 && (element.tag == 'ul' || element.tag == 'ol')) {
+      _insertNewLine();
+      return;
+    }
+
+    if (softLineBreak &&
+        _didRemoveTrailingSoftLineBreak &&
+        element.tag == 'a') {
       _insertNewLine();
       return;
     }
