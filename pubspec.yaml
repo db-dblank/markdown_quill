@@ -11,11 +11,11 @@ environment:
 dependencies:
   charcode: ^1.3.1
   collection: ^1.18.0
-  # flutter_quill: ^10.1.2
-  flutter_quill:
-    git:
-      url: https://github.com/db-dblank/flutter-quill.git
-      ref: deepdive
+  flutter_quill: ^10.1.2
+  # flutter_quill:
+  #   git:
+  #     url: https://github.com/db-dblank/flutter-quill.git
+  #     ref: deepdive
   markdown: ^7.2.1
 
 dev_dependencies:

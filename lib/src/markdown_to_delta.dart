@@ -19,6 +19,9 @@ typedef ElementToEmbeddableConvertor = Embeddable Function(
   Map<String, String> elAttrs,
 );
 
+/// Custom visit element function.
+typedef CustomVisitElement = bool? Function(md.Element element, Delta delta);
+
 /// Whether to insert a new line before or after the element.
 typedef ShouldInsertNewLine = bool? Function(md.Element element);
 
@@ -32,6 +35,7 @@ class MarkdownToDelta extends Converter<String, Delta>
     this.customElementToBlockAttribute = const {},
     this.customElementToEmbeddable = const {},
     this.softLineBreak = false,
+    this.customVisitElementBefore,
     this.shouldInsertNewLineBeforeElement,
     this.shouldInsertNewLineAfterElement,
   });
@@ -42,16 +46,24 @@ class MarkdownToDelta extends Converter<String, Delta>
   final Map<String, ElementToEmbeddableConvertor> customElementToEmbeddable;
   final bool softLineBreak;
 
+  /// Custom visitElementBefore function.
+  /// Called when an Element has been reached, before its children have been visited.
+  ///
+  /// If `true`, its children will be visited.
+  /// If `false`, its children will not be visited.
+  /// If `null`, the default handler will be used.
+  final CustomVisitElement? customVisitElementBefore;
+
   /// Whether to insert a new line before the element.
-  /// If true, a new line will be inserted before the element.
-  /// If false, a new line will not be inserted before the element.
-  /// If null, the default handler will be used.
+  /// If `true`, a new line will be inserted before the element.
+  /// If `false`, a new line will not be inserted before the element.
+  /// If `null`, the default handler will be used.
   final ShouldInsertNewLine? shouldInsertNewLineBeforeElement;
 
   /// Whether to insert a new line after the element.
-  /// If true, a new line will be inserted after the element.
-  /// If false, a new line will not be inserted after the element.
-  /// If null, the default handler will be used.
+  /// If `true`, a new line will be inserted after the element.
+  /// If `false`, a new line will not be inserted after the element.
+  /// If `null`, the default handler will be used.
   final ShouldInsertNewLine? shouldInsertNewLineAfterElement;
 
   // final _blockTags = <String>[
@@ -206,6 +218,9 @@ class MarkdownToDelta extends Converter<String, Delta>
   @override
   bool visitElementBefore(md.Element element) {
     _insertNewLineBeforeElementIfNeeded(element);
+
+    final res = customVisitElementBefore?.call(element, _delta);
+    if (res != null) return res;
 
     _didRemoveTrailingSoftLineBreak = false;
     final tag = element.tag;

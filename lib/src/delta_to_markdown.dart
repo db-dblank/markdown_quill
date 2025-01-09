@@ -39,8 +39,8 @@ extension on Object? {
 }
 
 ///
-typedef DeltaToMarkdownVisitLineHandleNewLine = void Function(
-    Style style, StringSink out);
+typedef DeltaToMarkdownVisitLineHandleNewLine = bool Function(
+    Line line, StringSink out);
 
 ///
 typedef CustomContentHandler = void Function(QuillText text, StringSink out);
@@ -253,8 +253,8 @@ class DeltaToMarkdown extends Converter<Delta, String>
       }
     });
     if (visitLineHandleNewLine != null) {
-      visitLineHandleNewLine?.call(style, out);
-      return out;
+      final handled = visitLineHandleNewLine?.call(line, out);
+      if (handled ?? false) return out;
     }
     if (style.isEmpty ||
         style.values.every((item) => item.scope != AttributeScope.block)) {
