@@ -14,7 +14,7 @@ dependencies:
   flutter_quill:
     git:
       url: https://github.com/db-dblank/flutter-quill.git
-      ref: 74b274362678b692474edf512f25702a02cf3c82
+      ref: f2177dc46f5180f7cbd7f643ea81600626c54d57
   markdown: ^7.2.1
 
 dev_dependencies:
